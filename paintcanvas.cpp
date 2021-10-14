@@ -18,13 +18,19 @@ void PaintCanvas::resizeImage(QImage *image, const QSize &newSize)
 
 void PaintCanvas::mousePressEvent(QMouseEvent *event)
 {
-    // Set focus - focus
+    // Set focus - focus is needed to process subsequent key strokes
     setFocus();
 
     // Set drawing true based on button press
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Left Mouse Press " << rect();
-        wind = QRect(300,300,400,400);
+        qDebug() << "Left Mouse Press " << event->pos();
+
+        // Set Pan Active and Capture the Start position
+        pan_start_ = event->pos();
+
+        //Capture the start location of the top left
+        // We move this in the Pan method
+        window_start_ = wind.topLeft();
     }
     else if(event->button() == Qt::RightButton){
         qDebug() << "Left Mouse Press " << rect();
@@ -35,16 +41,23 @@ void PaintCanvas::mousePressEvent(QMouseEvent *event)
 
 void PaintCanvas::mouseMoveEvent(QMouseEvent *event)
 {
-    // If drawing is active and there is a move then draw
+
     if ((event->buttons() & Qt::LeftButton)){
-        qDebug() << "Left Mouse Move Event";
+
+        // Calculate delta from start psotion
+        QPoint delta = event->pos() - pan_start_;
+        //qDebug() << "Window: " << wind << "Delta: " << delta;
+
+        // Move the top left by the delta amount
+        wind.moveTopLeft(-delta + window_start_);
     }
+    update();
 }
 
 void PaintCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Left Mouse Relese";
+
     }
 
 }
@@ -82,25 +95,27 @@ void PaintCanvas::keyPressEvent(QKeyEvent *event)
 
 void PaintCanvas::paintEvent(QPaintEvent *event)
 {
-    // https://web.mit.edu/~firebird/arch/sun4x_59/doc/html/coordsys.html
+    // See window viewport details
+    // 1. https://flylib.com/books/en/2.18.1/painting_with_qpainter.html
+    // 2. https://web.mit.edu/~firebird/arch/sun4x_59/doc/html/coordsys.html
+
     QPen pen;  // creates a default pen
     QBrush brush;
     QPainter painter(this);
 
 
-   /* QRect cur_rect = rect();
-    int cur_width = cur_rect.width();
-    int cur_height = cur_rect.height();
-    painter.setWindow( -cur_height,-cur_height/2, cur_width,cur_height );*/
+    // Set the window
     painter.setWindow( wind );
-
-
     QRect v = painter.viewport();
+
+    // Create non distorted view port of the logical space
+    // Keep the aspect ratio
     int d = qMin( v.width(), v.height() );
     painter.setViewport( v.left() + (v.width()-d)/2,
                        v.top() + (v.height()-d)/2, d, d );
 
 
+    // Draw Space
     QRectF rectToDraw(QPointF(-500.0,-500.0),QSizeF(1000.0,1000.0));
     pen.setStyle(Qt::SolidLine);
     pen.setWidth(3);
@@ -109,12 +124,9 @@ void PaintCanvas::paintEvent(QPaintEvent *event)
     pen.setJoinStyle(Qt::RoundJoin);
     painter.setPen(pen);
     painter.setBrush(Qt::white);
-
     painter.drawRect(rectToDraw);
 
-    QRectF testRect(QPointF(450.0,450.0),QSizeF(100.0,150.0));
-    painter.drawRect(testRect);
-
+    // Draw Grid
     painter.setPen(Qt::gray);
     for (int x = -500; x < 500; x+=100) {
         painter.drawLine(x,-500,x,500);
@@ -123,7 +135,12 @@ void PaintCanvas::paintEvent(QPaintEvent *event)
         painter.drawLine(-500,y,500,y);
     }
 
+    // Draw Origin Elipse
     painter.drawEllipse(QPoint(0,0),10,10);
+
+    // Additional Objects
+    QRectF testRect(QPointF(450.0,450.0),QSizeF(100.0,150.0));
+    painter.drawRect(testRect);
 }
 
 void PaintCanvas::resizeEvent(QResizeEvent *event)

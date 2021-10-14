@@ -21,6 +21,11 @@ private:
     QRectF lastEraserRect;
     QRect wind;
 
+    //! Widget position of the mouse at the start of a pan event
+    QPoint pan_start_;
+
+    //! Window Position at the start of a pan event
+    QPoint window_start_;
 
 
     // QWidget interface
