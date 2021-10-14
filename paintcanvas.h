@@ -20,6 +20,11 @@ private:
     QRectF lastRect;
     QRectF lastEraserRect;
     QRect wind;
+    QRect v;
+    int d;
+    int wind_min;
+
+    float ratio;
 
     //! Widget position of the mouse at the start of a pan event
     QPoint pan_start_;

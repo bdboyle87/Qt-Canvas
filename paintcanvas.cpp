@@ -23,7 +23,11 @@ void PaintCanvas::mousePressEvent(QMouseEvent *event)
 
     // Set drawing true based on button press
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Left Mouse Press " << event->pos();
+        // USEFUL DEBUG LOGIC FOR ODD MOTION
+        /*qDebug() << "Left Mouse Press " << event->pos();
+        qDebug() << "viewport: " << v;
+        qDebug() << "window: " << wind;
+        qDebug() << "d: " << d << " wind min: " << wind_min << " ratio: " << ratio;*/
 
         // Set Pan Active and Capture the Start position
         pan_start_ = event->pos();
@@ -33,7 +37,7 @@ void PaintCanvas::mousePressEvent(QMouseEvent *event)
         window_start_ = wind.topLeft();
     }
     else if(event->button() == Qt::RightButton){
-        qDebug() << "Left Mouse Press " << rect();
+        // Reset Wind size
         wind = QRect(-500,-500,1000,1000);
     }
     update();
@@ -41,15 +45,14 @@ void PaintCanvas::mousePressEvent(QMouseEvent *event)
 
 void PaintCanvas::mouseMoveEvent(QMouseEvent *event)
 {
-
     if ((event->buttons() & Qt::LeftButton)){
 
         // Calculate delta from start psotion
         QPoint delta = event->pos() - pan_start_;
-        //qDebug() << "Window: " << wind << "Delta: " << delta;
 
         // Move the top left by the delta amount
-        wind.moveTopLeft(-delta + window_start_);
+        // Ratio is a mearue of the viewport size relative to the  window.
+        wind.moveTopLeft(-(delta)/ratio + window_start_);
     }
     update();
 }
@@ -106,14 +109,19 @@ void PaintCanvas::paintEvent(QPaintEvent *event)
 
     // Set the window
     painter.setWindow( wind );
-    QRect v = painter.viewport();
+    v = painter.viewport();
 
     // Create non distorted view port of the logical space
     // Keep the aspect ratio
-    int d = qMin( v.width(), v.height() );
+    d = qMin( v.width(), v.height() );
     painter.setViewport( v.left() + (v.width()-d)/2,
-                       v.top() + (v.height()-d)/2, d, d );
+                        v.top() + (v.height()-d)/2, d, d );
 
+    //Capture Min Wind dimension
+    wind_min = qMin( wind.width(), wind.height() );
+
+    // Create ratio of viewport and window. This is needed to pan the world and the view port and the window are differencet sizes.
+    ratio = static_cast<float>(d) / static_cast<float>(wind_min);
 
     // Draw Space
     QRectF rectToDraw(QPointF(-500.0,-500.0),QSizeF(1000.0,1000.0));
