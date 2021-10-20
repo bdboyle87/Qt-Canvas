@@ -9,6 +9,8 @@ PaintCanvas::PaintCanvas(QWidget *parent) : QWidget(parent),
     wind(-500,-500, 1000,1000 )
 {
 
+    // Turn on mouse tracking so that we get motion without a mouse button press
+    setMouseTracking(true);
 }
 
 void PaintCanvas::resizeImage(QImage *image, const QSize &newSize)
@@ -45,15 +47,25 @@ void PaintCanvas::mousePressEvent(QMouseEvent *event)
 
 void PaintCanvas::mouseMoveEvent(QMouseEvent *event)
 {
+    QPoint epos = event->pos();
+
     if ((event->buttons() & Qt::LeftButton)){
 
         // Calculate delta from start psotion
-        QPoint delta = event->pos() - pan_start_;
+        QPoint delta = epos - pan_start_;
 
         // Move the top left by the delta amount
         // Ratio is a mearue of the viewport size relative to the  window.
         wind.moveTopLeft(-(delta)/ratio + window_start_);
     }
+
+
+    //World Loc
+    QPointF world_loc = QPointF(epos-QPoint(v.width()/2,v.height()/2))/ratio + QPointF(wind.center());
+
+    qDebug() << "Mouse Location: " << world_loc;
+
+    emit SignalMouseAt( epos );
     update();
 }
 

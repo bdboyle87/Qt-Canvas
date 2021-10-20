@@ -47,6 +47,10 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 
+signals:
+
+    void SignalMouseAt(QPoint eventPos );
+
 public:
     void Add_Misc_Paintable( PaintableObject * obj )
     {
