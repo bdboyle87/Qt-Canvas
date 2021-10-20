@@ -8,7 +8,7 @@ PaintCanvas::PaintCanvas(QWidget *parent) : QWidget(parent),
     lastEraserRect(QRectF(0,0,0,0)),
     wind(-500,-500, 1000,1000 )
 {
-    QPainter painter(this);
+
 }
 
 void PaintCanvas::resizeImage(QImage *image, const QSize &newSize)
@@ -96,6 +96,22 @@ void PaintCanvas::keyPressEvent(QKeyEvent *event)
     update();
 }
 
+void PaintCanvas::wheelEvent( QWheelEvent * event)
+{
+    // Angle Roll
+    QPoint angle_delta = event->angleDelta();
+
+    if(angle_delta.y() > 0)
+    {
+       wind-=QMargins( 10,  10,  10,  10);
+    }
+    else
+    {
+        wind+=QMargins( 10,  10,  10,  10);
+    }
+    update();
+}
+
 void PaintCanvas::paintEvent(QPaintEvent *event)
 {
     // See window viewport details
@@ -146,15 +162,20 @@ void PaintCanvas::paintEvent(QPaintEvent *event)
     // Draw Origin Elipse
     painter.drawEllipse(QPoint(0,0),10,10);
 
-    // Additional Objects
-    QRectF testRect(QPointF(450.0,450.0),QSizeF(100.0,150.0));
-    painter.drawRect(testRect);
+    // Paint items handed to the canvas
+    foreach( PaintableObject * p, m_Misc_Paintables )
+    {
+        painter.save();
+
+        p->UIPaint( painter );
+
+        painter.restore();
+    }
 }
 
 void PaintCanvas::resizeEvent(QResizeEvent *event)
 {
     update();
-    qDebug() << "Resize Event";
 
     QWidget::resizeEvent(event);
 }
