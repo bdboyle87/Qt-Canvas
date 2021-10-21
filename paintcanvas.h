@@ -9,7 +9,7 @@ class PaintCanvas : public QWidget
 {
     Q_OBJECT
 public:
-    explicit PaintCanvas(QWidget *parent = nullptr);
+    explicit PaintCanvas(QWidget *parent, QRect default_canvas, double grid_spacing);
 
 signals:
 
@@ -22,6 +22,8 @@ private:
     QRectF lastRect;
     QRectF lastEraserRect;
     QRect wind;
+    const QRect default_window;
+    int grid_spacing_;
     QRect v;
     int d;
     int wind_min;

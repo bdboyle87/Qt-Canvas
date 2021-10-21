@@ -3,10 +3,12 @@
 #include <QPainter>
 #include <QMouseEvent>
 
-PaintCanvas::PaintCanvas(QWidget *parent) : QWidget(parent),
+PaintCanvas::PaintCanvas(QWidget *parent, QRect default_canvas, double grid_spacing) : QWidget(parent),
     lastRect(QRectF(0,0,0,0)),
     lastEraserRect(QRectF(0,0,0,0)),
-    wind(-500,-500, 1000,1000 )
+    wind(default_canvas),
+    default_window(default_canvas),
+    grid_spacing_(grid_spacing)
 {
 
     // Turn on mouse tracking so that we get motion without a mouse button press
@@ -40,7 +42,7 @@ void PaintCanvas::mousePressEvent(QMouseEvent *event)
     }
     else if(event->button() == Qt::RightButton){
         // Reset Wind size
-        wind = QRect(-500,-500,1000,1000);
+        wind = default_window;
     }
     update();
 }
@@ -99,11 +101,7 @@ void PaintCanvas::keyPressEvent(QKeyEvent *event)
         qDebug() << "Key Right";
         wind.moveRight(wind.right()+10);
     }
-    else if(event->key() == Qt::Key_Z)
-    {
-        qDebug() << "Zoom";
-        wind-=QMargins( 10,  10,  10,  10);
-    }
+
     QWidget::keyPressEvent(event);
     update();
 }
@@ -113,13 +111,15 @@ void PaintCanvas::wheelEvent( QWheelEvent * event)
     // Angle Roll
     QPoint angle_delta = event->angleDelta();
 
+    int zoom_change = grid_spacing_ * 0.1;
+
     if(angle_delta.y() > 0)
     {
-       wind-=QMargins( 10,  10,  10,  10);
+       wind-=QMargins( zoom_change,  zoom_change,  zoom_change,  zoom_change);
     }
     else
     {
-        wind+=QMargins( 10,  10,  10,  10);
+        wind+=QMargins( zoom_change,  zoom_change,  zoom_change,  zoom_change);
     }
     update();
 }
@@ -152,9 +152,9 @@ void PaintCanvas::paintEvent(QPaintEvent *event)
     ratio = static_cast<float>(d) / static_cast<float>(wind_min);
 
     // Draw Space
-    QRectF rectToDraw(QPointF(-500.0,-500.0),QSizeF(1000.0,1000.0));
+    QRectF rectToDraw(default_window);
     pen.setStyle(Qt::SolidLine);
-    pen.setWidth(3);
+    pen.setWidth((grid_spacing_ * 0.06));
     pen.setBrush(Qt::black);
     pen.setCapStyle(Qt::RoundCap);
     pen.setJoinStyle(Qt::RoundJoin);
@@ -164,15 +164,15 @@ void PaintCanvas::paintEvent(QPaintEvent *event)
 
     // Draw Grid
     painter.setPen(Qt::gray);
-    for (int x = -500; x < 500; x+=100) {
-        painter.drawLine(x,-500,x,500);
+    for (int x = default_window.left(); x < default_window.right(); x+=grid_spacing_) {
+        painter.drawLine(x,default_window.top(),x,default_window.bottom());
     }
-    for (int y = -500; y < 500; y+=100) {
-        painter.drawLine(-500,y,500,y);
+    for (int y = default_window.top(); y < default_window.bottom(); y+=grid_spacing_) {
+        painter.drawLine(default_window.left(),y,default_window.right(),y);
     }
 
     // Draw Origin Elipse
-    painter.drawEllipse(QPoint(0,0),10,10);
+    painter.drawEllipse(QPoint(0,0),grid_spacing_/5,grid_spacing_/5);
 
     // Paint items handed to the canvas
     foreach( PaintableObject * p, m_Misc_Paintables )
