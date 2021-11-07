@@ -4,3 +4,4 @@ PaintableObject::PaintableObject()
 {
 
 }
+
