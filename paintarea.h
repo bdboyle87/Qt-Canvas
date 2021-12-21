@@ -1,18 +1,18 @@
 #ifndef PAINTAREA_H
 #define PAINTAREA_H
 
-#include <QWidget>
+#include <QFrame>
 
 #include <QVBoxLayout>
 #include <QLabel>
 
 #include "paintcanvas.h"
 
-class PaintArea : public QWidget
+class PaintArea : public QFrame
 {
     Q_OBJECT
         public:
-                 explicit PaintArea(QWidget *parent = nullptr);
+                 explicit PaintArea(QWidget *parent, QRect default_canvas, double grid_spacing);
 
     PaintCanvas * GetCanvas(){
         return(canvas);
